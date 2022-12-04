@@ -1,8 +1,9 @@
 import { Watch } from 'react-loader-spinner';
+import styles from './Loader.module.css'
 
 export const Loader = () => {
   return (
-    <div>
+    <div className={styles.Loader}>
       <Watch
         height="80"
         width="80"
