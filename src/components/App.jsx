@@ -75,20 +75,23 @@ export class App extends Component {
   };
 
   render() {
-    const { images, isLoading, largeImage, showModal } = this.state;
-
+    const { images, isLoading, largeImage, showModal, page } = this.state;
+    const isNotLastPage = images.length / page === 12;
+    const showButton = images.length > 0 && !isLoading && isNotLastPage;
     return (
       <div>
         <Searchbar onSubmit={this.onSubmit} />
         {images.length !== 0 && (
           <ImageGallery images={images} openModal={this.openModal} />
         )}
+        {isLoading && <Loader />}
+        {showButton && (
+          <Button nextPage={this.nextPage} />
+        )}
         {showModal && (
           <Modal toggleModal={this.toggleModal} largeImage={largeImage} />
         )}
-        {isLoading && <Loader />}
         <ToastContainer autoClose={2000} />
-        {images.length >= 12 && <Button nextPage={this.nextPage} />}
       </div>
     );
   }
