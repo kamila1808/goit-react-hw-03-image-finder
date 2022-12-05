@@ -2,10 +2,11 @@ import { Component } from 'react';
 
 import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
-import { fetchImages } from './services/Api';
+import {fetchImages} from './services/Api';
 import { Button } from './Button/Button';
 import { Loader } from './Loader/Loader';
 import { Modal } from './Modal/Modal';
+import { mapped } from './services/Mapper';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -20,31 +21,35 @@ export class App extends Component {
     error: null,
   };
 
+
   componentDidUpdate(_, prevState) {
-    const prevPage = prevState.page;
-    const prevSearchQuery = prevState.searchQuery;
-    const { searchQuery, page, images } = this.state;
-    if (prevPage !== page || prevSearchQuery !== searchQuery) {
-      try {
-        this.setState({ isLoading: true });
-        const response = fetchImages(searchQuery, page);
-        response.then(data => {
-          data.data.hits.length === 0
-            ? toast.error('Ничего не найдено')
-            : data.data.hits.forEach(({ id, webformatURL, largeImageURL }) => {
-                !images.some(image => image.id === id) &&
-                  this.setState(({ images }) => ({
-                    images: [...images, { id, webformatURL, largeImageURL }],
-                  }));
-              });
-          this.setState({ isLoading: false });
-        });
-      } catch (error) {
-        this.setState({ error, isLoading: false });
-      } finally {
-      }
+    if (
+      this.state.searchQuery !== prevState.searchQuery ||
+      this.state.page !== prevState.page
+    ) {
+      this.getImages();
     }
   }
+
+  getImages() {
+    const { searchQuery, page } = this.state;
+
+    this.setState({ isLoading: true });
+    fetchImages(searchQuery, page)
+      .then(response => {
+        return response.json();
+      })
+      .then(response => {
+        return this.setState(prevState => ({
+          images: [...prevState.images, ...mapped(response.hits)],
+          totalHits: response.totalHits,
+        }));
+      })
+      .finally(() => {
+        this.setState({ isLoading: false });
+      });
+  }
+
 
   onSubmit = searchQuery => {
     if (searchQuery.trim() === '') {
